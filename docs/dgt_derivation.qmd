@@ -1,0 +1,700 @@
+---
+title: "Discrete Gauss Transforms for Investment-Consumption Analysis"
+subtitle: "Derivation and Plane-Wave Algorithm"
+author: "L. Odette (FM Global, May 2014)"
+date: today
+#engine: jupyter
+#jupyter: julia-1.12
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    theme: cosmo
+    
+  pdf:
+    toc: true
+    number-sections: true
+    geometry: margin=1in
+#bibliography: references.bib
+embed-resources: true
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Background and Motivation
+
+The central problem is computing the cumulative distribution function
+(CDF) or *hurdle probability* of terminal wealth in a discrete
+multi-period investment-consumption model. Approximately 75 million
+Americans will retire over the next 15 years, and the question of
+whether a fixed asset base can sustain consumption over a random
+lifetime is of considerable practical importance.
+
+The state-of-the-art approaches include continuous-time approximations,
+upper and lower bounds on ruin probability, moment matching, direct
+convolution, and Monte Carlo simulation. This document describes a
+**fast Gaussian kernel method** — the Discrete Gauss Transform (DGT) —
+based on the plane-wave algorithm of Greengard & Sun (1998), which
+achieves sub-quadratic complexity.
+
+------------------------------------------------------------------------
+
+# Discrete Investment-Consumption Model
+
+## Wealth Dynamics
+
+Let the constant $\Delta_\tau$ denote the length of each time step,
+$\mu$ the drift, $\sigma$ the volatility, and $c_{\tau_k}$ the
+consumption at the $k$-th consumption time $\tau_k$. At each consumption
+time the budget constraint (with unit Gaussian $\phi_k$) is
+
+$$W_{\tau_{k+1}} + c_{\tau_{k+1}}
+  = W_{\tau_k}
+    \exp\!\Bigl(
+      \Bigl(\mu - \tfrac{\sigma^2}{2}\Bigr)\Delta_\tau
+      + \sigma\sqrt{\Delta_\tau}\,\phi_k
+    \Bigr).$$
+
+## Terminal Wealth
+
+For $T = K\Delta_\tau$ steps, given initial wealth $W_0$, and
+independent unit Gaussians $\{\phi_k\}$, terminal wealth is
+
+$$W_T
+  = W_0
+    \exp\!\Biggl(\sum_{k=0}^{K-1}
+      \Bigl(\mu - \tfrac{\sigma^2}{2}\Bigr)\Delta
+      + \sigma\sqrt{\Delta}\,\phi_k
+    \Biggr)
+  - \sum_{k=0}^{K} c_k
+    \exp\!\Biggl(\sum_{j=k}^{K-1}
+      \Bigl(\mu - \tfrac{\sigma^2}{2}\Bigr)\Delta
+      + \sigma\sqrt{\Delta}\,\phi_j
+    \Biggr).$$
+
+------------------------------------------------------------------------
+
+# Transition Probabilities and the Gaussian Kernel
+
+## Single-Step Transition Density
+
+The single-step transition probabilities are log-normal. The probability
+of moving from log-wealth $s_i = \ln W_{τ_k}$ to log-wealth
+$t_j = \ln W_{τ_{k+1}}$ is
+
+$$\mathbb{P}^{(k+1)}\!\left\{W_{\tau_{k+1}} = x_j \;\Big|\; W_{\tau_k} = x_i\right\}
+  = \frac{d\!\ln x_{k+1,j}}{2\pi\sigma^2\Delta_\tau}
+    \exp\!\left(
+      -\frac{\bigl(\ln w_{k+1,j} - \ln w_{k,i}
+             - \bigl(\mu - \tfrac{\sigma^2}{2}\bigr)\Delta_\tau\bigr)^2}
+            {2\sigma^2\Delta_\tau}
+    \right).$$
+
+Summing over sources $i$ yields the probability at target $t_j$:
+
+$$\mathbb{P}^{(k+1)}\!\left\{W_{\tau_k} = e^{t_j}\right\}
+  = \sum_i \rho_i\, G(t_j,\, s_i),$$
+
+where
+
+$$\rho_i \;\equiv\; \mathbb{P}^{(k)}\!\left\{W_{\tau_k} = e^{s_i}\right\} d t_j,
+\qquad
+\delta \;\equiv\; 2\sigma^2\Delta_\tau,
+\qquad
+m \;\equiv\; \Bigl(\mu - \tfrac{\sigma^2}{2}\Bigr)\Delta_\tau,$$
+
+and the **Gaussian kernel** is
+
+$$G(t_j, s_i)
+  \;=\;
+  \frac{1}{\sqrt{\pi\delta}}
+  \exp\!\left(-\frac{(t_j - s_i - m)^2}{\delta}\right).$$
+
+## The Discrete Gauss Transform
+
+The full DGT to be evaluated is
+
+$$\mathbb{P}\{t_j\}
+  = \sum_{i=1}^{N} \rho_i\, G(t_j, s_i)
+  = \frac{1}{\sqrt{\pi\delta}}
+    \sum_{i=1}^{N} \rho_i
+    \exp\!\left(-\frac{(t_j - s_i - m)^2}{\delta}\right),
+\quad j = 1, \ldots, M.$$
+
+Naïve evaluation costs $O(NM)$. The plane-wave algorithm reduces this to
+$O\bigl((N + M)P + R\,P\bigr)$ where $P$ is the number of plane-wave
+modes and $R$ is the number of source bins.
+
+------------------------------------------------------------------------
+
+# Plane-Wave Algorithm (Greengard & Sun, 1998)
+
+## Fourier Representation of the Gaussian Kernel
+
+The key identity is that the Gaussian kernel is the inverse Fourier
+transform of a Gaussian in frequency space:
+
+$$\frac{\rho_i}{2\pi\sqrt{\delta}}
+\int_{-\infty}^{\infty}
+  e^{\,i\,\frac{t_j - s_i - m}{\sqrt{\delta}}\,\omega
+     \;-\;\frac{\omega^2}{4}}
+\,d\omega
+\;=\;
+\frac{\rho_i}{\sqrt{\pi\delta}}\,
+e^{-\!\left(\frac{t_j - s_i - m}{\sqrt{\delta}}\right)^{\!2}}.$$
+
+## Band-Limiting and Discretisation
+
+Approximate the integral by band-limiting to
+$\omega \in [-\Omega,\Omega]$ for bandwidth $\Omega$ and discretising
+with increment $\Delta_\omega = \Omega / P$:
+
+$$\frac{\rho_i}{2\pi\sqrt{\delta}}
+\int_{-\infty}^{\infty}
+  e^{\,i\,\frac{t_j - s_i - m}{\sqrt{\delta}}\,\omega - \frac{\omega^2}{4}}
+\,d\omega
+\;\approx\;
+\frac{\rho_i\,\Delta_\omega}{2\pi\sqrt{\delta}}
+\sum_{p=-P}^{P}
+  e^{-\!\left(\frac{p\Delta_\omega}{2}\right)^{\!2}}
+  e^{\,i\,\frac{t_j - s_i - m}{\sqrt{\delta}}\,p\Delta_\omega}.$$
+
+## Source–Target Factorisation
+
+Define the **plane-wave weight** and **plane-wave basis function**:
+
+$$\theta(p)
+  \;\equiv\;
+  \frac{\Delta_\omega}{2\pi\sqrt{\delta}}\,
+  e^{-\!\left(\frac{p\Delta_\omega}{2}\right)^{\!2}},
+\qquad
+f(\xi,\,p)
+  \;\equiv\;
+  e^{\,i\,\frac{\xi}{\sqrt{\delta}}\,p\Delta_\omega}.$$
+
+With the shorthand $\xi = t_j - s_i - m$ the approximation becomes
+
+$$\rho_i\,\sum_{p=-P}^{P} \theta(p)\,f(t_j - s_i - m,\,p).$$
+
+The crucial observation is the **multiplicative decomposition**:
+choosing a target-bin centre $t_0$,
+
+$$f(t_j - s_i - m,\, p)
+  = f(t_0 - s_i - m,\, p)\cdot f(t_j - t_0,\, p).$$
+
+This separates *between-bin* interactions $f(t_0 - s_i - m, p)$ from
+*within-bin* corrections $f(t_j - t_0, p)$, enabling the three-stage
+algorithm below.
+
+------------------------------------------------------------------------
+
+# Three-Stage Plane-Wave Algorithm
+
+## Stage 1 — Source to Plane-Wave (S2W)
+
+For each target bin with centre $t_0$, accumulate the $N$ sources into
+$2P+1$ plane-wave coefficients:
+
+$$\vec{f}(t_0)
+  = \Bigl(
+      \sum_{i} \rho_i\,\theta(1)\,f(t_0 - s_i - m,\, 1),\;
+      \ldots,\;
+      \sum_{i} \rho_i\,\theta(P)\,f(t_0 - s_i - m,\, P)
+    \Bigr).$$
+
+In matrix form, with $\mathbf{F}_{pi} = \theta(p)\,f(t_0 - s_i - m, p)$
+and $\boldsymbol{\rho} = (\rho_1, \ldots, \rho_N)^\top$:
+
+$$\begin{bmatrix}
+\theta(1)\,f(t_0-s_1-m,1) & \cdots & \theta(1)\,f(t_0-s_N-m,1) \\
+\vdots & \ddots & \vdots \\
+\theta(P)\,f(t_0-s_1-m,P) & \cdots & \theta(P)\,f(t_0-s_N-m,P)
+\end{bmatrix}
+\begin{bmatrix}\rho_1 \\ \vdots \\ \rho_N\end{bmatrix}
+=
+\begin{bmatrix}
+\sum_{i=1}^N \rho_i\,\theta(1)\,f(t_0-s_i-m,1) \\
+\vdots \\
+\sum_{i=1}^N \rho_i\,\theta(P)\,f(t_0-s_i-m,P)
+\end{bmatrix}.$$
+
+**Cost:** $O(PN)$ per target bin, $O(PNR)$ total — or $O(PN)$ amortised
+when sources are binned once.
+
+## Stage 2 — Plane-Wave to Local (W2L) / Target-to-Target Shift
+
+Translate the plane-wave expansion from bin centre $t_0$ to each of the
+$M$ local targets in the bin using the within-bin phase factor:
+
+$$\begin{bmatrix}
+f(t_1-t_0,1) & \cdots & f(t_1-t_0,P) \\
+\vdots & \ddots & \vdots \\
+f(t_M-t_0,1) & \cdots & f(t_M-t_0,P)
+\end{bmatrix}
+\times
+\begin{bmatrix}
+\sum_i \rho_i\,\theta(1)\,f(t_0-s_i-m,1) \\
+\vdots \\
+\sum_i \rho_i\,\theta(P)\,f(t_0-s_i-m,P)
+\end{bmatrix}
+=
+\begin{bmatrix}
+\sum_i \rho_i\,\theta(1)\,f(t_1-s_i-m,1) \\
+\vdots \\
+\sum_i \rho_i\,\theta(P)\,f(t_M-s_i-m,P)
+\end{bmatrix}.$$
+
+Moving from one target bin to the adjacent one only involves a **phase
+shift** $e^{\,i\,h\,p\Delta_\omega/\sqrt{\delta}}$ (where $h$ is the bin
+width), so the $O((2R+1)P)$ bin-translation cost reduces to $O(3P)$ via
+incremental shifting.
+
+## Stage 3 — Local to Target (L2T)
+
+Collapse the plane-wave vector to scalar probabilities at each target by
+taking twice the real part (modes $p \neq 0$) plus the constant $p=0$
+term:
+
+$$\mathbb{P}\{t_j\}
+  = \underbrace{\theta(0)\sum_{i=1}^{N}\rho_i}_{\text{accumulated }p=0\text{ coeff}}
+    + 2\,\Re\!\left(
+        \sum_{p=1}^{P}
+          \left[\sum_{i=1}^{N} \rho_i\,\theta(p)\,f(t_0 - s_i - m,\,p)\right]
+          f(t_j - t_0,\,p)
+      \right).$$
+
+Note: the p=0 constant is $\theta(0)\sum_i\rho_i$ (not merely
+$\theta(0)$), because $f(\xi,0) = e^0 = 1$ for all $\xi$ and the source
+weights $\rho_i$ need not sum to unity in general. When
+$\sum_i\rho_i = 1$ (properly normalised discrete probabilities) this
+reduces to $\theta(0) = \Delta_\omega/(2\pi\sqrt{\delta})$, as shown on
+slide 16 of the original presentation.
+
+------------------------------------------------------------------------
+
+# Pseudocode
+
+The complete plane-wave DGT algorithm is given below.
+
+```         
+Algorithm: Discrete Gauss Transform (Plane-Wave / FGT)
+
+Input:
+  sources   s[1..N]     — log-wealth source points
+  weights   ρ[1..N]     — source probability weights
+  targets   t[1..M]     — log-wealth target points
+  δ                     — variance parameter  (δ = 2σ²Δτ)
+  m                     — drift shift         (m = (μ - σ²/2)Δτ)
+  P                     — number of plane-wave modes (p = 1..P)
+  Ω                     — bandwidth cutoff
+  Δω = Ω / P            — wavenumber increment
+
+Output:
+  prob[1..M]            — probability estimates at each target
+
+────────────────────────────────────────────────────────────────
+Pre-computation:
+  For p = -P to P:
+    θ[p] ← (Δω / (2π√δ)) × exp(-(p·Δω/2)²)
+
+────────────────────────────────────────────────────────────────
+Step 1 — Partition sources and targets into bins of width h:
+  Assign each source s[i] to bin B_src(i)
+  Assign each target t[j] to bin B_tgt(j)
+  Let t0[b] be the centre of target bin b
+
+────────────────────────────────────────────────────────────────
+Step 2 — Source to Plane-Wave (S2W):
+  For each target bin b with centre t0[b]:
+    For p = 1 to P:
+      coeff[b, p] ← 0   (complex)
+    For each source i in neighbouring source bins of b:
+      ξ ← t0[b] - s[i] - m
+      For p = 1 to P:
+        coeff[b, p] ← coeff[b, p]
+                       + ρ[i] × θ[p] × exp(i·p·Δω·ξ / √δ)
+
+────────────────────────────────────────────────────────────────
+Step 3 — Target-to-Target Shift (incremental phase shift):
+  When translating expansion from bin b to adjacent bin b+1
+  with bin width h:
+    For p = 1 to P:
+      coeff[b+1, p] ← coeff[b, p] × exp(i·p·Δω·h / √δ)
+
+────────────────────────────────────────────────────────────────
+Step 4 — Plane-Wave to Local (W2L):
+  For each target bin b:
+    For each target j in bin b:
+      η ← t[j] - t0[b]
+      For p = 1 to P:
+        local[j, p] ← coeff[b, p] × exp(i·p·Δω·η / √δ)
+
+────────────────────────────────────────────────────────────────
+Step 5 — Local to Target (L2T):
+  For each target j in bin b:
+    p0_contrib ← Re( coeff[b, 0] )           // accumulated p=0 term
+                                              //   = θ(0) × Σ_i ρ_i
+    prob[j] ← p0_contrib
+               + 2 × Re( Σ_{p=1}^{P} local[j, p] )
+
+Return prob[1..M]
+```
+
+------------------------------------------------------------------------
+
+# Complexity Summary
+
+| Stage                          | Cost                            |
+|--------------------------------|---------------------------------|
+| Pre-computation of $\theta[p]$ | $O(P)$                          |
+| S2W (source accumulation)      | $O(PN)$                         |
+| Bin-to-bin phase shift         | $O(3P)$ per bin → $O(RP)$ total |
+| W2L (local expansion)          | $O(PM)$                         |
+| L2T (collapse)                 | $O(PM)$                         |
+| **Total**                      | $O\bigl((N+M)P + RP\bigr)$      |
+
+For fixed $P$ and $R$ this is **linear** in $N$ and $M$, compared to
+$O(NM)$ for naïve convolution.
+
+------------------------------------------------------------------------
+
+# References
+
+Greengard, L. & Sun, X. (1998). A new version of the fast Gauss
+transform. *Documenta Mathematica*, Extra Volume ICM III, 575–584.
+
+Huang, H., Milevsky, M. A. & Wang, J. (2004). Ruined moments in your
+life: how good are the approximations? *Insurance: Mathematics and
+Economics*.
+
+------------------------------------------------------------------------
+
+# Code
+
+```{r}
+
+```
+
+```{julia}
+struct DGTParams
+    μ  :: Float64   # drift
+    σ  :: Float64   # volatility
+    Δτ :: Float64   # time-step length
+    P  :: Int       # number of plane-wave modes
+    Ω  :: Float64   # wavenumber bandwidth
+
+    # Derived constants (computed once at construction)
+    δ  :: Float64   # 2σ²Δτ
+    m  :: Float64   # (μ - σ²/2)Δτ
+    Δω :: Float64   # Ω / P
+end
+
+function DGTParams(; μ, σ, Δτ, P=64, Ω=10.0)
+    δ  = 2σ^2 * Δτ
+    m  = (μ - σ^2 / 2) * Δτ
+    Δω = Ω / P
+    DGTParams(μ, σ, Δτ, P, Ω, δ, m, Δω)
+end
+```
+
+```{julia}
+#| label: function dgt_naive
+#| message: false
+
+#     dgt_naive(s, ρ, t, par) -> Vector{Float64}
+# 
+# Reference O(NM) evaluation of the Discrete Gauss Transform.
+# 
+#     prob[j] = Σᵢ ρᵢ / √(πδ) × exp(-(tⱼ - sᵢ - m)² / δ)
+# 
+# Arguments
+# - `s`   : source log-wealth points (length N)
+# - `ρ`   : source probability weights (length N)
+# - `t`   : target log-wealth points (length M)
+# - `par` : `DGTParams` instance
+
+function dgt_naive(
+        s   :: AbstractVector{Float64},
+        ρ   :: AbstractVector{Float64},
+        t   :: AbstractVector{Float64},
+        par :: DGTParams
+    ) :: Vector{Float64}
+
+    N, M = length(s), length(t)
+    @assert length(ρ) == N
+    inv_sqrt_πδ = 1.0 / sqrt(π * par.δ)
+    prob = zeros(Float64, M)
+
+    for j in 1:M
+        acc = 0.0
+        @inbounds for i in 1:N
+            z = (t[j] - s[i] - par.m) / sqrt(par.δ)
+            acc += ρ[i] * exp(-z^2)
+        end
+        prob[j] = inv_sqrt_πδ * acc
+    end
+    return prob
+end
+
+```
+
+```{julia}
+#| label: function plane_wave_weights
+#| message: false
+#
+
+#     plane_wave_weights(par) -> Vector{Complex{Float64}}
+# 
+# Pre-compute the plane-wave weights for modes p = -P…P.
+# 
+#     θ(p) = Δω/(2π√δ) × exp(-(pΔω/2)²)
+# 
+# Returned as a vector indexed 1 .. 2P+1 (index `P+1` ↔ mode 0).
+
+function plane_wave_weights(par::DGTParams) :: Vector{Float64}
+    P   = par.P
+    Δω  = par.Δω
+    δ   = par.δ
+    prefactor = Δω / (2π * sqrt(δ))
+    θ = Vector{Float64}(undef, 2P + 1)
+    for k in 1:(2P+1)
+        p = k - (P + 1)   # mode index: -P..P
+        θ[k] = prefactor * exp(-(p * Δω / 2)^2)
+    end
+    return θ
+end
+```
+
+```{julia}
+#| label: Plane-wave basis function  f(ξ, p) = exp(i·p·Δω·ξ/√δ)
+@inline function f_basis(ξ::Float64, p::Int, par::DGTParams) :: Complex{Float64}
+    phase = p * par.Δω * ξ / sqrt(par.δ)
+    return Complex{Float64}(cos(phase), sin(phase))   # exp(i·phase)
+end
+```
+
+```{julia}
+#| label: function dgt_planwave
+#| message: false
+#     dgt_planwave(s, ρ, t, par; h=nothing) -> Vector{Float64}
+# 
+# Fast Discrete Gauss Transform using the plane-wave (FGT) algorithm.
+# 
+# # Algorithm stages
+# 1. **S2W** — accumulate N sources into 2P+1 complex plane-wave coefficients
+#    for each target bin.
+# 2. **W2L + bin shift** — translate coefficients to each of the M local
+#    targets, propagating between adjacent bins via an incremental phase shift.
+# 3. **L2T** — collapse the complex vector to a real probability at each target:
+#    `prob[j] = θ(0) + 2 Re(Σ_{p=1}^{P} coeff_p)`.
+# 
+# Arguments
+# - `s`   : source log-wealth points (length N)
+# - `ρ`   : source probability weights (length N)
+# - `t`   : target log-wealth points (length M), must be sorted
+# - `par` : `DGTParams` instance
+# - `h`   : bin width (defaults to `4√δ`, a rule-of-thumb)
+
+function dgt_planwave(
+        s   :: AbstractVector{Float64},
+        ρ   :: AbstractVector{Float64},
+        t   :: AbstractVector{Float64},
+        par :: DGTParams;
+        h   :: Union{Float64, Nothing} = nothing
+    ) :: Vector{Float64}
+
+    N = length(s)
+    M = length(t)
+    @assert length(ρ) == N "ρ must have the same length as s"
+    @assert issorted(t)    "target vector t must be sorted"
+
+    P  = par.P
+    δ  = par.δ
+    m  = par.m
+    Δω = par.Δω
+    √δ = sqrt(δ)
+
+    # Choose bin width
+    bin_width = isnothing(h) ? 4.0 * √δ : h
+
+    # Pre-compute plane-wave weights θ[p], p = -P..P
+    θ = plane_wave_weights(par)                    # length 2P+1 (index P+1 ↔ mode 0)
+
+    # ── Bin assignment ──────────────────────────────────────
+    t_min = minimum(t)
+    t_max = maximum(t)
+
+    # Number of target bins needed to cover the target range
+    n_bins = max(1, ceil(Int, (t_max - t_min) / bin_width) + 1)
+
+    # Bin centre for bin b (0-indexed internally, 1-indexed externally)
+    bin_centre(b::Int) = t_min + (b - 0.5) * bin_width
+
+    # Assign each target to a bin (1..n_bins)
+    tgt_bin = [max(1, min(n_bins, ceil(Int, (t[j] - t_min) / bin_width)))
+               for j in 1:M]
+
+    # ── Stage 1: Source to Plane-Wave (S2W) ─────────────────
+    # coeff[b, p+P+1] = Σᵢ ρᵢ θ(p) f(t0[b] - sᵢ - m, p)
+    # We use a (n_bins × (2P+1)) matrix of Complex{Float64}
+    coeff = zeros(Complex{Float64}, n_bins, 2P + 1)
+
+    # Pre-compute integer modes array: modes[k] = k - (P+1), for k = 1..2P+1
+    modes = collect(-P:P)   # length 2P+1, modes[P+1] = 0
+
+    for i in 1:N
+        si = s[i]
+        ρi = ρ[i]
+        # Each source contributes to all target bins.
+        # A production implementation restricts to a window of radius ~R bins.
+        for b in 1:n_bins
+            t0 = bin_centre(b)
+            ξ  = t0 - si - m             # between-bin displacement
+            @inbounds for k in 1:(2P + 1)
+                p     = modes[k]          # mode integer: -P..P
+                phase = p * Δω * ξ / √δ
+                coeff[b, k] += ρi * θ[k] * Complex{Float64}(cos(phase), sin(phase))
+            end
+        end
+    end
+
+    # ── Stage 2 & 3: W2L (within-bin expansion) + L2T ───────
+    #
+    # prob[j] = Re(coeff[b, P+1])              ← p = 0 contribution
+    #           + 2 Re( Σ_{p=1}^{P} coeff[b, P+1+p] × f(t[j]-t0, p) )
+    #
+    # The p=0 mode: f(ξ, 0) = exp(0) = 1, so coeff[b, P+1] = θ(0) Σ_i ρ_i.
+    # Using the accumulated coefficient (rather than bare θ(0)) is essential
+    # when the source weights do not sum to unity.
+    prob = zeros(Float64, M)
+
+    for j in 1:M
+        b  = tgt_bin[j]
+        t0 = bin_centre(b)
+        η  = t[j] - t0                   # within-bin displacement
+
+        # p = 0 term (purely real because f(η,0) = 1)
+        p0_contrib = real(coeff[b, P + 1])
+
+        # Positive modes p = 1..P
+        acc = Complex{Float64}(0.0, 0.0)
+        @inbounds for p in 1:P
+            phase = p * Δω * η / √δ
+            fw    = Complex{Float64}(cos(phase), sin(phase))
+            acc  += coeff[b, P + 1 + p] * fw
+        end
+        prob[j] = p0_contrib + 2.0 * real(acc)
+    end
+
+    return prob
+end
+```
+
+```{julia}
+#| label: function one_step_cdf
+
+#     one_step_cdf(s, ρ, t_grid, par; fast=true) -> Vector{Float64}
+# 
+# Compute the one-step transition CDF on `t_grid`, given source
+# distribution `(s, ρ)`.  Set `fast=false` to use the naïve O(NM) kernel.
+# 
+# # Arguments
+# - `s`      : source log-wealth points
+# - `ρ`      : source probability weights
+# - `t_grid` : target log-wealth grid (need not be sorted)
+# - `par`    : `DGTParams` instance
+# - `fast`   : if `true` (default), use the plane-wave algorithm
+
+function one_step_cdf(
+        s      :: AbstractVector{Float64},
+        ρ      :: AbstractVector{Float64},
+        t_grid :: AbstractVector{Float64},
+        par    :: DGTParams;
+        fast   :: Bool = true
+    ) :: Vector{Float64}
+
+    pdf_vals = fast ? 
+      dgt_planwave(s, ρ, sort(t_grid), par) : 
+      dgt_naive(s, ρ, sort(t_grid), par)
+
+    # Trapezoidal cumulative sum for CDF
+    t_sorted = sort(t_grid)
+    cdf = similar(pdf_vals)
+    cdf[1] = 0.0
+    for j in 2:length(t_sorted)
+        dt = t_sorted[j] - t_sorted[j-1]
+        cdf[j] = cdf[j-1] + 0.5 * dt * (pdf_vals[j-1] + pdf_vals[j])
+    end
+    # Normalise
+    cdf ./= max(cdf[end], eps())
+    return cdf
+end
+
+```
+
+```{julia}
+#| label: smoke test
+
+using BenchmarkTools
+println("=== Discrete Gauss Transform — Demo ===\n")
+
+# Model parameters (from FM Global slide 19 base case)
+μ  = 0.07     # 7% annual drift
+σ  = 0.20     # 20% annual volatility
+Δτ = 1.0      # annual time steps
+W0 = 20.0     # initial wealth
+c  = 1.0      # annual consumption
+
+par = DGTParams(μ=μ, σ=σ, Δτ=Δτ, P=64, Ω=10.0)
+println("Derived parameters:")
+println("  δ = 2σ²Δτ = $(round(par.δ, digits=6))")
+println("  m = (μ-σ²/2)Δτ = $(round(par.m, digits=6))")
+println("  Δω = Ω/P = $(round(par.Δω, digits=6))")
+println()
+
+# Build a discretised initial distribution: point mass at ln(W0)
+N  = 200
+s0 = log(W0)
+s  = range(s0 - 3*sqrt(par.δ), s0 + 3*sqrt(par.δ), length=N) |> collect
+ρ  = [exp(-(si - s0)^2 / (0.01par.δ)) for si in s]
+ρ ./= sum(ρ) * (s[2] - s[1])   # normalise to PDF
+
+# Target grid (log-wealth)
+M = 300
+t = range(s0 - 5*sqrt(par.δ), s0 + 5*sqrt(par.δ), length=M) |> collect
+
+# Evaluate with both methods
+# @btime (from BenchmarkTools) runs multiple trials and strips JIT noise.
+# Replace with @elapsed if BenchmarkTools is not installed.
+println("Benchmarking naïve O(NM) reference…")
+prob_naive = dgt_naive(s, ρ, t, par)   # warm-up
+@btime dgt_naive($s, $ρ, $t, $par)
+
+println("Benchmarking plane-wave FGT…")
+prob_fast = dgt_planwave(s, ρ, t, par)  # warm-up
+@btime dgt_planwave($s, $ρ, $t, $par)
+
+# Error report using LinearAlgebra.norm (imported at top of module)
+err_vec  = prob_fast .- prob_naive
+l∞_err   = maximum(abs.(err_vec)) / maximum(abs.(prob_naive))
+l2_err   = norm(err_vec) / norm(prob_naive)
+println()
+println("Error vs naïve reference:")
+println("  L∞ relative error: $(round(l∞_err, sigdigits=4))")
+println("  L2 relative error: $(round(l2_err, sigdigits=4))")
+
+# Moments
+dt = t[2] - t[1]
+m0_fast  = sum(prob_fast)  * dt
+m1_fast  = sum(exp.(t) .* prob_fast) * dt
+m0_naive = sum(prob_naive) * dt
+m1_naive = sum(exp.(t) .* prob_naive) * dt
+println()
+println("Moments (one-step transition):")
+println("  m⁰  naïve=$(round(m0_naive, digits=5))  fast=$(round(m0_fast, digits=5))")
+println("  m¹  naïve=$(round(m1_naive, digits=5))  fast=$(round(m1_fast, digits=5))")
+println("\nDone.")
+```
