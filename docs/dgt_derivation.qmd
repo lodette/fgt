@@ -762,3 +762,88 @@ println("  m⁰  naïve=$(round(m0_naive, digits=5))  fast=$(round(m0_fast, digi
 println("  m¹  naïve=$(round(m1_naive, digits=5))  fast=$(round(m1_fast, digits=5))")
 println("\nDone.")
 ```
+
+```{julia}
+include("../julia/FGT_Java/FGTV5.jl")
+include("../julia/FGT_Java/FGTrunner_with_distribution.jl")
+# include("../julia/FGT_Java/FGTrunner.jl")
+
+# using .FGTV5
+using .FGTrunner
+
+μ = 0.07
+σ = 0.20
+consumption = fill(1, 10)
+
+wealth, mass = FGTrunner.distribution(μ, σ, consumption, W0)
+
+using Printf
+
+for (w, m) in zip(wealth, mass)
+
+    @printf("%15.2f  %.10e\n", w, m)
+
+end
+
+```
+
+```{julia}
+include("../julia/FGT_Java/FGTV5.jl")
+include("../julia/FGT_Java/FGTrunner_distribution_fixed.jl")
+
+using .FGTrunner
+
+mu = 0.07
+sigma = 0.20
+W = 20.0
+H = 30
+c = fill(1.0, H)
+
+wealth, mass = FGTrunner.distribution(mu, sigma, c, W)
+
+println("points = ", length(mass))
+println("sum mass = ", sum(mass))
+println("max mass = ", maximum(mass))
+println("nonzero = ", count(!iszero, mass))
+
+using Printf
+for (w, m) in zip(wealth, mass)
+    @printf("%15.2f  %.10e\n", w, m)
+end
+```
+
+```{julia}
+include("../julia/FGT_Java/FGTV5.jl")
+include("../julia/FGT_Java/FGTrunner_direct_distribution.jl")
+
+using .FGTrunner
+
+mu = 0.07
+sigma = 0.20
+W = 21.5
+
+H = 30
+c = fill(1.0, H)
+
+wealth, mass = FGTrunner.distribution(mu, sigma, c, W)
+
+println(sum(mass))
+println(maximum(mass))
+println(count(>(0), mass))
+
+m1 = sum(mass .* wealth)
+m2 = sum(mass .* wealth.^2)
+m3 = sum(mass .* wealth.^3)
+m4 = sum(mass .* wealth.^4)
+
+println("m1 = ", m1)
+println("m2 = ", m2)
+println("m3 = ", m3)
+println("m4 = ", m4)
+
+wealth = wealth .+ 7.612255
+m1 = sum(mass .* wealth)
+m2 = sum(mass .* wealth.^2)
+m3 = sum(mass .* wealth.^3)
+m4 = sum(mass .* wealth.^4)
+```
