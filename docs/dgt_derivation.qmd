@@ -1,7 +1,7 @@
 ---
 title: "Discrete Gauss Transforms for Investment-Consumption Analysis"
 subtitle: "Derivation and Plane-Wave Algorithm"
-author: "L. Odette (FM Global, May 2014)"
+author: "L. Odette"
 date: today
 #engine: jupyter
 #jupyter: julia-1.12
@@ -637,6 +637,70 @@ end
 
 ```{julia}
 #| label: smoke test
+
+using BenchmarkTools
+println("=== Discrete Gauss Transform — Demo ===\n")
+
+# Model parameters (from FM Global slide 19 base case)
+μ  = 0.07     # 7% annual drift
+σ  = 0.20     # 20% annual volatility
+Δτ = 1.0      # annual time steps
+W0 = 20.0     # initial wealth
+c  = 1.0      # annual consumption
+
+par = DGTParams(μ=μ, σ=σ, Δτ=Δτ, P=64, Ω=10.0)
+println("Derived parameters:")
+println("  δ = 2σ²Δτ = $(round(par.δ, digits=6))")
+println("  m = (μ-σ²/2)Δτ = $(round(par.m, digits=6))")
+println("  Δω = Ω/P = $(round(par.Δω, digits=6))")
+println()
+
+# Build a discretised initial distribution: point mass at ln(W0)
+N  = 200
+s0 = log(W0)
+s  = range(s0 - 3*sqrt(par.δ), s0 + 3*sqrt(par.δ), length=N) |> collect
+ρ  = [exp(-(si - s0)^2 / (0.01par.δ)) for si in s]
+ρ ./= sum(ρ) * (s[2] - s[1])   # normalise to PDF
+
+# Target grid (log-wealth)
+M = 300
+t = range(s0 - 5*sqrt(par.δ), s0 + 5*sqrt(par.δ), length=M) |> collect
+
+# Evaluate with both methods
+# @btime (from BenchmarkTools) runs multiple trials and strips JIT noise.
+# Replace with @elapsed if BenchmarkTools is not installed.
+println("Benchmarking naïve O(NM) reference…")
+prob_naive = dgt_naive(s, ρ, t, par)   # warm-up
+@btime dgt_naive($s, $ρ, $t, $par)
+
+println("Benchmarking plane-wave FGT…")
+prob_fast = dgt_planwave(s, ρ, t, par)  # warm-up
+@btime dgt_planwave($s, $ρ, $t, $par)
+
+# Error report using LinearAlgebra.norm (imported at top of module)
+err_vec  = prob_fast .- prob_naive
+l∞_err   = maximum(abs.(err_vec)) / maximum(abs.(prob_naive))
+l2_err   = norm(err_vec) / norm(prob_naive)
+println()
+println("Error vs naïve reference:")
+println("  L∞ relative error: $(round(l∞_err, sigdigits=4))")
+println("  L2 relative error: $(round(l2_err, sigdigits=4))")
+
+# Moments
+dt = t[2] - t[1]
+m0_fast  = sum(prob_fast)  * dt
+m1_fast  = sum(exp.(t) .* prob_fast) * dt
+m0_naive = sum(prob_naive) * dt
+m1_naive = sum(exp.(t) .* prob_naive) * dt
+println()
+println("Moments (one-step transition):")
+println("  m⁰  naïve=$(round(m0_naive, digits=5))  fast=$(round(m0_fast, digits=5))")
+println("  m¹  naïve=$(round(m1_naive, digits=5))  fast=$(round(m1_fast, digits=5))")
+println("\nDone.")
+```
+
+```{julia}
+#| label: smoke test two
 
 using BenchmarkTools
 println("=== Discrete Gauss Transform — Demo ===\n")
