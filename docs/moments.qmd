@@ -1,0 +1,283 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+---
+
+## First moment
+
+$$W_{0}e^{\mu T}-e^{\mu T}\sum_{i=0}^{n}c_{i}e^{-\mu i\Delta t}$$
+
+::: callout-note
+The way the algorithm is written, we start in period 0 with $W_{0}=21$ and then immediately consume $c=1$ unit of wealth.
+:::
+
+```{r}
+#| label: first moment
+m1 <- function(W0, mu, dt, c) {
+  n  <- length(c) - 1L          # c is c_0, c_1, ..., c_n  → n+1 elements
+  T  <- n * dt
+  i  <- 0:n
+  exp(mu * T) * (W0 - sum(c * exp(-mu * i * dt)))
+}
+
+m1_2 <- function(W0, mu, dt, c) {
+  n <- length(c) - 1L
+  i <- 0:n
+  W0 * exp(mu * n * dt) - sum(c * exp(mu * (n - i) * dt))
+}
+
+
+# correct value is ~ 64.491
+m1(W0 = 21, mu = 0.07, dt = 1, c = rep(1,0,31))
+
+m1_2(W0 = 21, mu = 0.07, dt = 1, c = rep(1,0,31))
+
+```
+
+## Second moment
+
+$$ \begin{align*}
+ & e^{\left(2\mu+\sigma^{2}\right)T}\left(W_{0}^{2}-2W_{0}\sum_{i=0}^{n}c_{i}e^{-\left(\mu+\sigma^{2}\right)i\Delta t}\right.\\
+ & \left.+2\sum_{i=0}^{n}\sum_{j=0}^{i-1}c_{i}c_{j}e^{-\mu j\Delta t-\left(\mu+\sigma^{2}\right)i\Delta t}+\sum_{i=0}^{n}c_{i}^{2}e^{-\left(2\mu+\sigma^{2}\right)i\Delta t}\right)
+\end{align*}$$
+
+```{r}
+#| label: second moment
+m2 <- function(W0, mu, sigma, dt, cvec) {
+  n  <- length(cvec) - 1L        # cvec = c_0, ..., c_n
+  i  <- 0:n
+  s2 <- sigma^2
+
+  a <- cvec * exp(-(mu + s2) * i * dt)   # outer weights
+  b <- cvec * exp(-mu * i * dt)          # inner weights
+  Bprev <- c(0, head(cumsum(b), -1L))    # B_{i-1} = sum_{j<i} b_j
+
+  exp((2 * mu + s2) * n * dt) *
+    (W0^2
+     - 2 * W0 * sum(a)
+     + 2 * sum(a * Bprev)
+     + sum(cvec^2 * exp(-(2 * mu + s2) * i * dt)))
+}
+
+# correct value is ~ 33847
+m2(W0 = 21, mu = 0.07, sigma = 0.20, dt = 1, c = rep(1,0,31))
+```
+
+## Third moment
+
+$$\begin{align*}
+ & W_{0}^{3}-3W_{0}^{2}\sum_{s_{0}=0}^{n}c_{s_{0}}e^{-\left(\mu+2\sigma^{2}\right)s_{0}\Delta t}+3W_{0}\sum_{s_{1}=0}^{n}\sum_{s_{0}=0}^{n}c_{s_{1}}c_{s_{0}}e^{-\left(\mu+\sigma^{2}\right)s_{0}\Delta t-\left(\mu+2\sigma^{2}\right)s_{1}\Delta t}\\
+ & -\sum_{s_{2}=0}^{n}\sum_{s_{1}=0}^{n}\sum_{s_{0}=0}^{n}c_{s_{2}}c_{s_{1}}c_{s_{0}}e^{-\mu s_{0}\Delta t-\left(\mu+\sigma^{2}\right)s_{1}\Delta t-\left(\mu+2\sigma^{2}\right)s_{2}\Delta t}
+\end{align*}$$
+
+```{r}
+m3 <- function(W0, mu, sigma, dt, cvec, prefactor = 1) {
+  n  <- length(cvec) - 1L        # cvec = c_0, ..., c_n
+  i  <- 0:n
+  s2 <- sigma^2
+
+  A0 <- sum(cvec * exp(-(mu          ) * i * dt))
+  A1 <- sum(cvec * exp(-(mu +     s2 ) * i * dt))
+  A2 <- sum(cvec * exp(-(mu + 2 * s2 ) * i * dt))
+
+  exp(3*(mu + s2 ) * n * dt) * (W0^3 - 3 * W0^2 * A2 + 3 * W0 * A1 * A2 - A0 * A1 * A2)
+}
+
+# correct value is ~ 5.82E+07 
+m3(W0 = 20, mu = 0.07, sigma = 0.20, dt = 1, c = rep(1,0,31))
+
+m3(W0 = 21, mu = log(1+0.07), sigma = 0.20, dt = 1, c = rep(1,0,31))
+
+
+```
+
+```{r}
+dt = 1
+sigma = 0.20
+mu = 0.07
+cvec = rep(1,0,31)
+n  <- length(cvec) - 1L        # cvec = c_0, ..., c_n
+i  <- 0:n
+s2 <- sigma^2
+
+A0 <- sum(cvec * exp(-(mu          ) * i * dt))
+A1 <- sum(cvec * exp(-(mu +     s2 ) * i * dt))
+A2 <- sum(cvec * exp(-(mu + 2 * s2 ) * i * dt))
+
+
+sum1 <- 0
+for (s_0 in 0:n){
+  sum1 <- 
+    sum1 + cvec[s_0+1] * exp(-(mu + 2 * s2 ) * s_0 * dt)
+  
+}
+
+A2 - sum1
+
+sum2 <- 0
+for (s_1 in 0:n){
+  for (s_0 in 0:n){
+    sum2 <- 
+      sum2 + cvec[s_1+1]*cvec[s_0+1] * exp(-(mu + s2 ) * s_0 * dt -(mu + 2 * s2 )* s_1 * dt )
+  }
+}
+
+A1 * A2 - sum2
+
+sum2 <- 0
+for (s_1 in 0:n){
+  for (s_0 in 0:n){
+    sum2 <- 
+      sum2 + cvec[s_1+1]*cvec[s_0+1] * exp(-(mu + s2 ) * s_0 * dt -(mu + 2 * s2 )* s_1 * dt )
+  }
+}
+
+
+sum3 <- 0
+for (s_2 in 0:n){
+  for (s_1 in 0:n){
+    for (s_0 in 0:n){
+      sum3 <- 
+        sum3 + 
+        cvec[s_2+1]*cvec[s_1+1]*cvec[s_0+1] * 
+        exp(-(mu * s_0 * dt) - (mu + s2 ) * s_1 * dt -(mu + 2 * s2 )* s_2 * dt )
+    }
+  }
+}
+  
+A0 * A1 * A2 - sum3
+
+
+#3147.31 * exp(3*(mu + s2 ) * n * dt)
+
+```
+
+```{r}
+dt = 1
+sigma = 0.20
+mu = 0.07
+cvec = rep(1,0,31)
+n  <- length(cvec) - 1L        # cvec = c_0, ..., c_n
+i  <- 0:n
+s2 <- sigma^2
+W0 <- 21
+
+sum1 <- 0
+for (s_0 in 0:n){
+  sum1 <- 
+    sum1 + cvec[s_0+1] * exp(-(mu + 2 * s2 ) * s_0 * dt)
+  
+}
+
+sum2 <- 0
+for (s_1 in 0:n){
+  for (s_0 in 0:(s_1-1)){
+    if(s_0 >= 0){
+      sum2 <- 
+        sum2 + cvec[s_1+1]*cvec[s_0+1] * exp(-(mu + s2 ) * s_0 * dt -(mu + 2 * s2 )* s_1 * dt )
+    }
+  }
+}
+
+sum3 <- 0
+for (s_2 in 0:n){
+  for (s_1 in 0:(s_2-1)){
+    if(s_1 >= 0){
+      for (s_0 in 0:(s_1-1)){
+        if(s_0 >= 0){
+          sum3 <- 
+            sum3 + 
+            cvec[s_2+1]*cvec[s_1+1]*cvec[s_0+1] * 
+            exp(-(mu * s_0 * dt) - (mu + s2 ) * s_1 * dt -(mu + 2 * s2 )* s_2 * dt )
+        }
+      }
+    }
+  }
+}
+
+exp(3*(mu + s2 ) * n * dt) * (W0^3 - 3 * W0^2 * sum1 + 3 * W0 * sum2 - sum3)
+
+```
+
+```{r}
+dt = 1
+sigma = 0.20
+mu = 0.07
+cvec = rep(1,0,31)
+n  <- length(cvec) - 1L        # cvec = c_0, ..., c_n
+i  <- 0:n
+s2 <- sigma^2
+W0 <- 21
+
+sum1 <- 0
+for (s_0 in 0:n){
+  sum1 <- 
+    sum1 + cvec[s_0+1] * exp(-(mu + 2 * s2 ) * s_0 * dt)
+  
+}
+
+sum2 <- 0
+for (s_1 in 0:n){
+  for (s_0 in 0:(max(s_1-1,0))){
+      sum2 <- 
+        sum2 + cvec[s_1+1]*cvec[s_0+1] * exp(-(mu + s2 ) * s_0 * dt -(mu + 2 * s2 )* s_1 * dt )
+  }
+}
+
+sum3 <- 0
+for (s_2 in 0:n){
+  for (s_1 in 0:(s_2-1)){
+    if(s_1 >= 0){
+      for (s_0 in 0:(s_1-1)){
+        if(s_0 >= 0){
+          sum3 <- 
+            sum3 + 
+            cvec[s_2+1]*cvec[s_1+1]*cvec[s_0+1] * 
+            exp(-(mu * s_0 * dt) - (mu + s2 ) * s_1 * dt -(mu + 2 * s2 )* s_2 * dt )
+        }
+      }
+    }
+  }
+}
+
+exp(3*(mu + s2 ) * n * dt) * (W0^3 - 3 * W0^2 * sum1 + 3 * W0 * sum2 - sum3)
+
+```
+
+$$\begin{align*}
+ & W_{0}^{3}-3W_{0}^{2}\sum_{s_{0}=0}^{n}c_{s_{0}}e^{-\left(\mu+2\sigma^{2}\right)s_{0}\Delta t}+3W_{0}\sum_{s_{1}=0}^{n}\sum_{s_{0}=0}^{s_{1}-1}c_{s_{1}}c_{s_{0}}e^{-\left(\mu+\sigma^{2}\right)s_{0}\Delta t-\left(\mu+2\sigma^{2}\right)s_{1}\Delta t}\\
+ & -\sum_{s_{2}=0}^{n}\sum_{s_{1}=0}^{s_{2}-1}\sum_{s_{0}=0}^{s_{1}-1}c_{s_{2}}c_{s_{1}}c_{s_{0}}e^{-\mu s_{0}\Delta t-\left(\mu+\sigma^{2}\right)s_{1}\Delta t-\left(\mu+2\sigma^{2}\right)s_{2}\Delta t}
+\end{align*}$$
+
+```{r}
+excl_cumsum <- function(x) c(0, head(cumsum(x), -1L))
+
+future_wealth_cube <- function(W0, mu, sigma, dt, cvec, prefactor = 1) {
+  stopifnot(length(cvec) >= 1L, is.numeric(cvec), all(is.finite(cvec)))
+  n  <- length(cvec) - 1L
+  i  <- 0:n
+  s2 <- sigma^2
+  
+  b0 <- cvec * exp(-(mu          ) * i * dt)
+  b1 <- cvec * exp(-(mu +     s2 ) * i * dt)
+  b2 <- cvec * exp(-(mu + 2 * s2 ) * i * dt)
+  
+  single <- sum(b2)                              # sum_{s0} c_{s0} e^{-(mu+2 s2) s0 dt}
+  double <- sum(b2 * excl_cumsum(b1))            # sum_{s1} sum_{s0<s1}
+  triple <- sum(b2 * excl_cumsum(b1 * excl_cumsum(b0)))
+  
+  prefactor * (W0^3 - 3 * W0^2 * single + 3 * W0 * double - triple)
+}
+
+
+exp(3*(mu + s2 ) * n * dt) * future_wealth_cube(W0 = 21, mu = 0.07, sigma = 0.20, dt = 1, c = rep(1,0,31))
+```
+
+## scratch
+
+$$
+\begin{eqnarray*}
+\left(a\alpha-b\beta\right)^{m} & = & \sum_{k=0}^{m}\left(-1\right)^{m-k}{m \choose k}a^{k}b^{m-k}\alpha^{k}\beta^{m-k}
+\end{eqnarray*}
+$$

@@ -847,3 +847,149 @@ m2 = sum(mass .* wealth.^2)
 m3 = sum(mass .* wealth.^3)
 m4 = sum(mass .* wealth.^4)
 ```
+
+```{julia}
+include("../julia/FGT_Java/FGTMonteCarlo.jl")
+
+using .FGTMonteCarlo
+
+mu = 0.07
+sigma = 0.20
+W = 20.0
+
+H = 30
+c = fill(1.0, H)
+
+terminal = FGTMonteCarlo.terminal_wealth(
+    mu,
+    sigma,
+    c,
+    W;
+    nsim = 1_000_000,
+    seed = 1234
+)
+
+moments = FGTMonteCarlo.raw_moments(terminal)
+println(moments)
+
+m1 = mean(terminal)
+m2 = mean(terminal .^ 2)
+m3 = mean(terminal .^ 3)
+m4 = mean(terminal .^ 4)
+
+fgt_moments = [
+    sum(mass .* wealth .^ k)
+    for k in 1:4
+]
+
+mc_moments = FGTMonteCarlo.raw_moments(terminal)
+
+for k in 1:4
+    println(k, "   ", fgt_moments[k], "   ", mc_moments[k])
+end
+```
+
+```{julia}
+include("../julia/FGT_Java/FGTMonteCarlo.jl")
+
+using .FGTMonteCarlo
+
+mu = 0.07
+sigma = 0.20
+W = 21.0
+
+H = 31
+c = fill(1.0, H)
+
+terminal = FGTMonteCarlo.terminal_wealth(
+    mu,
+    sigma,
+    c,
+    W;
+    nsim = 1_000_000,
+    seed = 1234
+)
+
+moments = FGTMonteCarlo.raw_moments(terminal)
+
+println(moments)
+```
+
+```{julia}
+include("../julia/FGT_Java/FGTMonteCarlo_corrected.jl")
+
+using .FGTMonteCarlo
+
+mu = 0.07
+sigma = 0.20
+W0 = 21.0
+
+T = 30
+c = fill(1.0, T)
+
+terminal = FGTMonteCarlo.terminal_wealth(
+    mu,
+    sigma,
+    c,
+    W0;
+    nsim = 1_000_000,
+    seed = 1234
+)
+
+moments = FGTMonteCarlo.raw_moments(terminal)
+
+println(moments)
+```
+
+```{julia}
+
+include("../julia/FGT_Java/FGTMonteCarlo_corrected.jl")
+
+using .FGTMonteCarlo
+using Statistics
+
+mu = 0.07
+sigma = 0.20
+W0 = 21.0
+
+T = 30
+c = fill(1.0, T)
+
+function repeated_moments(mu, sigma, consumption, W0;
+                          n = 100,
+                          nsim = 100_000,
+                          seed = 1234)
+
+    # Rows are Monte Carlo runs.
+    # Columns are moments 1 through 4.
+    moments = Matrix{Float64}(undef, n, 4)
+
+    for i in 1:n
+        terminal = FGTMonteCarlo.terminal_wealth(
+            mu,
+            sigma,
+            consumption,
+            W0;
+            nsim = nsim,
+            seed = seed + i - 1
+        )
+
+        moments[i, :] .= FGTMonteCarlo.raw_moments(terminal)
+    end
+
+    means = vec(mean(moments, dims = 1))
+    sds   = vec(std(moments, dims = 1))
+
+    return moments, means, sds
+end
+
+moments, means, sds = repeated_moments(
+    mu,
+    sigma,
+    c,
+    W0;
+    n = 500,
+    nsim = 100_000,
+    seed = 1234
+)
+```
