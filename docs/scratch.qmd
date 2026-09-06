@@ -1,0 +1,44 @@
+---
+title: "scratch"
+format: html
+editor: visual
+---
+
+## scratch equations
+
+$$
+\beta\equiv\sum_{i=0}^{n}c_{i}e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)i\Delta t+\sigma\sqrt{\Delta t}S_{i}}
+$$
+and
+
+$$
+\prod_{i=k+1}^{m}\beta
+$$
+$$
+
+\prod_{i=k+1}^{m}\beta
+=
+\sum_{j_{k+1}=0}^{n}\cdots\sum_{j_m=0}^{n}
+\left(\prod_{\ell=k+1}^{m}c_{j_\ell}\right)
+e^{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t
+\sum_{\ell=k+1}^{m}j_\ell
++
+\sigma\sqrt{\Delta t}
+\sum_{\ell=k+1}^{m}S_{j_\ell}
+}
+
+$$
+$$
+\varphi\left(j_{k+1},\ldots,j_{m}\right)
+=
+\sum_{j_{k+1}=0}^{n}\cdots\sum_{j_m=0}^{n}
+\left(\prod_{\ell=k+1}^{m}c_{j_\ell}\right)
+e^{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t
+\sum_{\ell=k+1}^{m}j_\ell
++
+\sigma\sqrt{\Delta t}
+\sum_{\ell=k+1}^{m}S_{j_\ell}
+}
+$$

@@ -1,0 +1,47 @@
+---
+title: "The Moments"
+format: html
+editor: visual
+---
+
+## Step 1
+
+The $m$-th moment is the expectation of
+
+$$\begin{eqnarray*}
+\left(a\alpha-b\beta\right)^{m} & = & \sum_{k=0}^{m}\left(-1\right)^{m-k}{m \choose k}a^{k}b^{m-k}\alpha^{k}\beta^{m-k}
+\end{eqnarray*}$$
+where
+
+$$\begin{eqnarray*}
+a & = & W_{0}e^{\sum_{i=0}^{n-1}\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t}=W_{0}e^{\left(\mu-\frac{\sigma^{2}}{2}\right)T}\\
+b & = & e^{\left(\mu-\frac{\sigma^{2}}{2}\right)T}\\
+\end{eqnarray*}$$
+
+So the $m$-th moment is the expectation of
+
+$$\begin{eqnarray*}
+\left(a\alpha-b\beta\right)^{m} & = & \sum_{k=0}^{m}\left(-1\right)^{m-k}{m \choose k}W_{0}^ke^{\left(\mu-\frac{\sigma^{2}}{2}\right)kT}e^{\left(\mu-\frac{\sigma^{2}}{2}\right)(m-k)T}\alpha^{k}\beta^{m-k}\\
+ & = & \sum_{k=0}^{m}\left(-1\right)^{m-k}{m \choose k}W_{0}^ke^{\left(\mu-\frac{\sigma^{2}}{2}\right)mT}\alpha^{k}\beta^{m-k}\\
+ & = & e^{\left(\mu-\frac{\sigma^{2}}{2}\right)mT}\sum_{k=0}^{m}\left(-1\right)^{m-k}{m \choose k}W_{0}^k \alpha^{k}\beta^{m-k}
+\end{eqnarray*}$$
+and so the $m$-th moment is
+
+$$\mathbb{E}\left[e^{\left(\mu-\frac{\sigma^{2}}{2}\right)mT}\sum_{k=0}^{m}\left(-1\right)^{m-k}{m \choose k}W_{0}^k \alpha^{k}\beta^{m-k}\right]=e^{\left(\mu-\frac{\sigma^{2}}{2}\right)mT}\sum_{k=0}^{m}\left(-1\right)^{m-k}{m \choose k}W_{0}^k \mathbb{E}\left[\alpha^{k}\beta^{m-k}\right]$$
+
+## Step 2
+
+We have 
+
+$$
+\begin{eqnarray*}
+\alpha & = & e^{\sigma\sqrt{\Delta t}\sum_{i=0}^{n-1}\phi_{i}}=e^{\sigma\sqrt{\Delta t}S_{0}}\\
+ \beta & = & \sum_{i=0}^{n}c_{i}e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)i\Delta t+\sigma\sqrt{\Delta t}S_{i}}
+\end{eqnarray*}
+$$
+so we need to compute
+
+$$\begin{eqnarray*}
+\mathbb{E}\left[\alpha^{k}\beta^{m-k}\right] & = & \mathbb{E}\left[e^{k\sigma\sqrt{\Delta t}S_{0}}\times\prod_{i=k+1}^{m}\beta_{i}\right]\\
+ &  & \mathbb{E}\left[\sum_{\kappa_{m}=0}^{n}\cdots\sum_{\kappa_{k+1}=0}^{n}\left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum_{i=k+1}^{m}S_{\kappa_{i}}\right)}\right]
+\end{eqnarray*}$$

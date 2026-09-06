@@ -276,8 +276,122 @@ exp(3*(mu + s2 ) * n * dt) * future_wealth_cube(W0 = 21, mu = 0.07, sigma = 0.20
 
 ## scratch
 
-$$
-\begin{eqnarray*}
+$$\begin{eqnarray*}
 \left(a\alpha-b\beta\right)^{m} & = & \sum_{k=0}^{m}\left(-1\right)^{m-k}{m \choose k}a^{k}b^{m-k}\alpha^{k}\beta^{m-k}
-\end{eqnarray*}
-$$
+\end{eqnarray*}$$ \## Statement
+
+Let $a,b,\alpha,\beta$ be elements of a commutative ring (real or complex numbers being the case of interest), and let $m\in\mathbb{Z}_{\geq 0}$. Then
+
+$$(a\alpha-b\beta)^{m}=\sum_{k=0}^{m}(-1)^{m-k}\binom{m}{k}a^{k}b^{m-k}\alpha^{k}\beta^{m-k}.$$
+
+A preliminary observation that removes most of the apparent content: the right side depends on $a,\alpha$ only through $a^k\alpha^k$ and on $b,\beta$ only through $b^{m-k}\beta^{m-k}$. Setting $A=a\alpha$ and $B=b\beta$, the claim is exactly
+
+$$(A-B)^m=\sum_{k=0}^m(-1)^{m-k}\binom{m}{k}A^kB^{m-k},$$
+
+and the four-variable form is recovered from $A^k=a^k\alpha^k$, $B^{m-k}=b^{m-k}\beta^{m-k}$ — which is itself an application of commutativity. So the statement is the binomial theorem, and the only question is whether you want it derived or cited.
+
+## Proof 1: substitution
+
+The binomial theorem states that for commuting $x,y$ and $m\geq 0$,
+
+$$(x+y)^m=\sum_{k=0}^m\binom{m}{k}x^ky^{m-k}.$$
+
+Take $x=a\alpha$ and $y=-b\beta$. Then
+
+$$(a\alpha-b\beta)^m=\sum_{k=0}^m\binom{m}{k}(a\alpha)^k(-b\beta)^{m-k}=\sum_{k=0}^m\binom{m}{k}a^k\alpha^k\,(-1)^{m-k}b^{m-k}\beta^{m-k},$$
+
+using $(uv)^n=u^nv^n$ and $(-w)^n=(-1)^nw^n$. Rearranging the (commuting) factors gives the claim. $\blacksquare$
+
+## Proof 2: induction on $m$, self-contained
+
+Proof 1 defers everything to the binomial theorem, so here is the argument without that appeal. Write $A=a\alpha$, $B=b\beta$; note $AB=BA$.
+
+**Base case** $m=0$. The left side is $1$ by convention on the empty product. The right side is the single term $k=0$: $(-1)^0\binom{0}{0}A^0B^0=1$.
+
+**Inductive step.** Suppose $(A-B)^m=\sum_{k=0}^m(-1)^{m-k}\binom{m}{k}A^kB^{m-k}$. Then
+
+$$(A-B)^{m+1}=A\sum_{k=0}^m(-1)^{m-k}\binom{m}{k}A^kB^{m-k}\;-\;B\sum_{k=0}^m(-1)^{m-k}\binom{m}{k}A^kB^{m-k}.$$
+
+Pulling $A$ and $B$ inside — the step that uses $BA^k=A^kB$ —
+
+$$=\sum_{k=0}^m(-1)^{m-k}\binom{m}{k}A^{k+1}B^{m-k}+\sum_{k=0}^m(-1)^{m-k+1}\binom{m}{k}A^{k}B^{m+1-k}.$$
+
+Reindex the first sum by $j=k+1$ (so $j$ runs $1$ to $m+1$) and the second by $j=k$ (so $j$ runs $0$ to $m$):
+
+$$=\sum_{j=1}^{m+1}(-1)^{m+1-j}\binom{m}{j-1}A^{j}B^{m+1-j}+\sum_{j=0}^{m}(-1)^{m+1-j}\binom{m}{j}A^{j}B^{m+1-j}.$$
+
+Both sums now carry the same sign factor $(-1)^{m+1-j}$ and the same monomial $A^jB^{m+1-j}$, so with the standard conventions $\binom{m}{-1}=\binom{m}{m+1}=0$ (which let both sums run over $j=0,\dots,m+1$) the coefficient of $A^jB^{m+1-j}$ is
+
+$$(-1)^{m+1-j}\left[\binom{m}{j-1}+\binom{m}{j}\right]=(-1)^{m+1-j}\binom{m+1}{j}$$
+
+by Pascal's rule. Hence
+
+$$(A-B)^{m+1}=\sum_{j=0}^{m+1}(-1)^{m+1-j}\binom{m+1}{j}A^{j}B^{m+1-j},$$
+
+completing the induction. Substituting $A^j=a^j\alpha^j$ and $B^{m+1-j}=b^{m+1-j}\beta^{m+1-j}$ gives the stated form. $\blacksquare$
+
+## What the hypotheses are actually doing
+
+**Commutativity is the only real assumption, and it is used twice.** Once cosmetically, to split $(a\alpha)^k$ into $a^k\alpha^k$. Once essentially, in the inductive step, to move $B$ past $A^k$. If $a,b,\alpha,\beta$ were matrices or operators the identity fails at $m=2$ already: $(A-B)^2=A^2-AB-BA+B^2$, which equals $A^2-2AB+B^2$ only when $AB=BA$. Given the moment calculations in this thread the point is moot — random variables commute under multiplication — but it is worth knowing which line would break if these ever became non-commuting objects.
+
+**The sign.** $(-1)^{m-k}=(-1)^{m+k}$ since they differ by $(-1)^{2k}$, so the identity is often written with $(-1)^{m+k}$; the two are interchangeable. The sign is attached to $b\beta$, the term carrying exponent $m-k$, which is why it appears as $(-1)^{m-k}$ rather than $(-1)^k$.
+
+**Degenerate cases.** $m=0$ requires $x^0=1$ including at $x=0$; this is the usual convention and is what makes the $k=0$ and $k=m$ terms behave when any of $a,b,\alpha,\beta$ vanish.
+
+I also expanded both sides symbolically for $m=0,\dots,8$ and confirmed they agree identically — not part of the proof, just a guard against a transcription slip in the statement.
+
+If we define
+
+$$a\alpha-b\beta=W_{0}e^{\sum_{i=0}^{n-1}\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t+\sigma\sqrt{\Delta t}\phi_{i}}-\sum_{i=0}^{n}c_{i}e^{\sum_{j=i}^{n-1}\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t+\sigma\sqrt{\Delta t}\phi_{j}}$$
+
+and
+
+$$\begin{eqnarray*}
+a & = & W_{0}e^{\sum_{i=0}^{n-1}\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t}=W_{0}e^{\left(\mu-\frac{\sigma^{2}}{2}\right)T}\\
+\alpha & = & e^{\sigma\sqrt{\Delta t}\sum_{i=0}^{n-1}\phi_{i}}=e^{\sigma\sqrt{\Delta t}S_{0}}\\
+b\beta & = & \sum_{i=0}^{n}c_{i}e^{\sum_{j=i}^{n-1}\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t+\sigma\sqrt{\Delta t}\phi_{j}}\\
+ & = & \sum_{i=0}^{n}c_{i}e^{\left(\mu-\frac{\sigma^{2}}{2}\right)(n-i)\Delta t+\sigma\sqrt{\Delta t}S_{i}}\\
+ & \Rightarrow & b=e^{\left(\mu-\frac{\sigma^{2}}{2}\right)T}\\
+ &  & \beta\equiv\sum_{i=0}^{n}c_{i}e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)i\Delta t+\sigma\sqrt{\Delta t}S_{i}}
+\end{eqnarray*}$$
+
+with $S_{i}\equiv\sum_{k=i}^{n-1}\phi_{k}$ for $\phi_{k}$ IID unit Normal variables.
+
+Thus
+
+$$a^{k}b^{m-k}=W_{0}^{k}e^{m\left(\mu-\frac{\sigma^{2}}{2}\right)T}$$
+
+and
+
+$$\begin{eqnarray*}
+\mathbb{E}\left[\alpha^{k}\beta^{m-k}\right] & = & \mathbb{E}\left[e^{k\sigma\sqrt{\Delta t}S_{0}}\times\prod_{i=k+1}^{m}\beta_{i}\right]\\
+ &  & \mathbb{E}\left[\sum_{\kappa_{m}=0}^{n}\cdots\sum_{\kappa_{k+1}=0}^{n}\left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum_{i=k+1}^{m}S_{\kappa_{i}}\right)}\right]
+\end{eqnarray*}$$
+
+and we note that the summand is a symmetric function
+
+$$\varphi\left(\kappa_{k+1},\ldots,\kappa_{m}\right)=\left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum_{i=k+1}^{m}S_{\kappa_{i}}\right)}$$
+
+and so, wlog we can take $\kappa_{k+1}\le\ldots\le\kappa_{m}$. Now while the sums implicit in the $S_{\kappa_{i}}$ terms on the right are overlapping as written, we can re-arrange them into non-overlapping sums, in which form the exponential is a product of independent random variables
+
+$$\begin{eqnarray*}
+\varphi\left(\kappa_{k+1},\ldots,\kappa_{m}\right) & = & \left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum_{i=k+1}^{m}S_{\kappa_{i}}\right)}\\
+ & = & \left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\sigma\sqrt{\Delta t}\left(k\left(S_{0}-S_{\kappa_{k+1}}\right)+\sum_{i=k+1}^{m}i\left(S_{\kappa_{i}}-S_{\kappa_{i+1}}\right)\right)}
+\end{eqnarray*}$$
+
+and $S_{\kappa_{i}}-S_{\kappa_{i+1}}$ represents the sum of $\kappa_{i+1}-\kappa_{i}$ IID unit normals, with $\kappa_{m+1}\equiv n$. Now we can take the expected value
+
+$$\mathbb{E}\left[\varphi\left(\kappa_{k+1},\ldots,\kappa_{m}\right)\right]=\left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\frac{\sigma^{2}}{2}\Delta t\left(k^{2}\kappa_{k+1}+\sum_{i=k+1}^{m}i^{2}\left(\kappa_{i+1}-\kappa_{i}\right)\right)}$$
+
+and re-arranging the terms
+
+$$\begin{eqnarray*}
+  &  & \frac{\sigma^{2}}{2}\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\frac{\sigma^{2}}{2}\Delta t\left(k^{2}\kappa_{k+1}+\sum_{i=k+1}^{m}i^{2}\left(\kappa_{i+1}-\kappa_{i}\right)\right)\\
+  & = & \frac{\sigma^{2}}{2}\Delta t\left(k^{2}\kappa_{k+1}+\sum_{i=k+1}^{m}\kappa_{i}+i^{2}\left(\kappa_{i+1}-\kappa_{i}\right)\right)\\
+  & = & -\frac{\sigma^{2}}{2}\Delta t\left(-k^{2}\kappa_{k+1}+\sum_{i=k+1}^{m}i^{2}\left(\kappa_{i}-\kappa_{i+1}\right)-\kappa_{i}\right)\\
+ & = & -\frac{\sigma^{2}}{2}\Delta t\left(\sum_{i=k+1}^{m}\left(i^{2}-\left(i-1\right)^{2}-1\right)\kappa_{i}-m^{2}n\right)\\
+ & = & -\left(\sum_{i=k+1}^{m}\left(i-1\right)\kappa_{i}\right)\sigma^{2}\Delta t+m^{2}\frac{\sigma^{2}}{2}T
+ \end{eqnarray*}
+ $$ since
+
+$$i^{2}-\left(i-1\right)^{2}-1=i^{2}-i^{2}+2i-1-1=2\left(i-1\right)$$ so the last term can be brought out with the $a^{k}b^{m-k}=W_{0}^{k}e^{m\left(\mu-\frac{\sigma^{2}}{2}\right)T}$ term to give $$W_{0}^{k}e^{m\left(\mu+\left(m-1\right)\frac{\sigma^{2}}{2}\right)T}$$ which multiplies $$\sum_{\kappa_{m}=0}^{n}\cdots\sum_{\kappa_{k+1}=0}^{n}\left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\mu\Delta t\left(\sum_{i=k+1}^{m}\kappa_{i}\right)-\sigma^{2}\Delta t\left(\sum_{i=k+1}^{m}\left(i-1\right)\kappa_{i}\right)}$$
