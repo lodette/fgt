@@ -41,31 +41,63 @@ $$\begin{eqnarray*}
 and so before computing $\mathbb{E}\left[\alpha^{k}\beta^{m-k}\right]$, note that $\alpha^{k}\beta^{m-k}$ is
 
 $$\begin{align*}
-e^{\sigma\sqrt{\Delta t}kS_{0}}\prod^{m}_{i=k+1}\beta & =e^{\sigma\sqrt{\Delta t}kS_{0}}\sum^{n}_{\kappa_{k+1}=0}\cdots\sum^{n}_{\kappa_{m}=0}\left(\prod^{m}_{\ell=k+1}c_{\kappa_{\ell}}\right)\exp\left\{ -\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum^{m}_{\ell=k+1}\kappa_{\ell}+\sigma\sqrt{\Delta t}\sum^{m}_{\ell=k+1}S_{\kappa_{\ell}}\right\} \\
- & =\sum^{n}_{\kappa_{k+1}=0}\cdots\sum^{n}_{\kappa_{m}=0}\left(\prod^{m}_{\ell=k+1}c_{\kappa_{\ell}}\right)\exp\left\{ -\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum^{m}_{\ell=k+1}\kappa_{\ell}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum^{m}_{\ell=k+1}S_{\kappa_{\ell}}\right)\right\} 
+e^{\sigma\sqrt{\Delta t}kS_{0}}\prod^{m}_{i=k+1}\beta & =e^{\sigma\sqrt{\Delta t}kS_{0}}\sum^{n}_{\kappa_{m}=0}\cdots\sum^{n}_{\kappa_{k+1}=0}\left(\prod^{m}_{\ell=k+1}c_{\kappa_{\ell}}\right)\exp\left\{ -\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum^{m}_{\ell=k+1}\kappa_{\ell}+\sigma\sqrt{\Delta t}\sum^{m}_{\ell=k+1}S_{\kappa_{\ell}}\right\} \\
+ & =\sum^{n}_{\kappa_{m}=0}\cdots\sum^{n}_{\kappa_{k+1}=0}\left(\prod^{m}_{\ell=k+1}c_{\kappa_{\ell}}\right)\exp\left\{ -\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum^{m}_{\ell=k+1}\kappa_{\ell}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum^{m}_{\ell=k+1}S_{\kappa_{\ell}}\right)\right\} 
 \end{align*}$$
 
 ::: callout-note
-For reference: $m$ is the moment number and the upper index in the choose expression, $k$ is the lower index in the choose expression (i.e. ${m \choose k}$) in [-@eq-m-moment], and $S_i\equiv\sum_{r=i}^{n-1}\phi_r$, where the $\phi_r$ are IID Gaussian random variables. The variable $n$ is the number of time steps in the process with step increment $\Delta t$, and $n\Delta t = T$.
+For reference: $m$ is the moment number and the upper index in the choose expression, $k$ is the lower index in the choose expression (i.e. ${m \choose k}$) in @eq-m-moment, and $S_i\equiv\sum_{r=i}^{n-1}\phi_r$, where the $\phi_r$ are IID Gaussian random variables. The variable $n$ is the number of time steps in the process with step increment $\Delta t$, and $n\Delta t = T$.
 :::
 
 ## Step 3
 
 Note that the summand is symmetric
 
-$$ 
-\varphi\left(j_{k+1},\ldots,j_{m}\right)=\left(\prod^{m}_{\ell=k+1}c_{j_{\ell}}\right)\exp\left\{ -\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum^{m}_{\ell=k+1}j_{\ell}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum^{m}_{\ell=k+1}S_{j_{\ell}}\right)\right\} $$
-
 $$\begin{eqnarray*}
 \varphi\left(\kappa_{k+1},\ldots,\kappa_{m}\right) & \equiv & \left(\prod_{\ell=k+1}^{m}c_{\kappa_{\ell}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{\ell=k+1}^{m}\kappa_{\ell}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum_{\ell=k+1}^{m}S_{\kappa_{\ell}}\right)}\\
  & = & \left(\prod_{\ell=k+1}^{m}c_{\kappa_{\ell}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{\ell=k+1}^{m}\kappa_{\ell}+\sigma\sqrt{\Delta t}\left(k\left(S_{0}-S_{\kappa_{k+1}}\right)+\sum_{\ell=k+1}^{m}\ell\left(S_{\kappa_{\ell}}-S_{\kappa_{\ell+1}}\right)\right)}
-\end{eqnarray*}$$
-
-ok
-
-$$\begin{eqnarray*}
-\varphi\left(\kappa_{k+1},\ldots,\kappa_{m}\right) & \equiv & \left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum_{i=k+1}^{m}S_{\kappa_{i}}\right)}\\
- & = & \left(\prod_{i=k+1}^{m}c_{\kappa_{i}}\right)e^{-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{i=k+1}^{m}\kappa_{i}+\sigma\sqrt{\Delta t}\left(k\left(S_{0}-S_{\kappa_{k+1}}\right)+\sum_{i=k+1}^{m}i\left(S_{\kappa_{i}}-S_{\kappa_{i+1}}\right)\right)}
-\end{eqnarray*}$$
+\end{eqnarray*}$$ {#eq-phi-sym}
 
 ## Step 4
+
+Because $\varphi\left(\kappa_{k+1},\ldots,\kappa_{m}\right)$ is symmetric, wlog we can choose $$0\le\kappa_{k+1}\le\kappa_{k+2}\le\cdots\le\kappa_m\le n$$
+
+And we now need to show the second part of @eq-phi-sym. Starting with
+
+$$\varphi\left(\kappa_{k+1},\ldots,\kappa_{m}\right)  \equiv  \left(\prod_{\ell=k+1}^{m}c_{\kappa_{\ell}}\right)\exp\left({-\left(\mu-\frac{\sigma^{2}}{2}\right)\Delta t\sum_{\ell=k+1}^{m}\kappa_{\ell}+\sigma\sqrt{\Delta t}\left(kS_{0}+\sum_{\ell=k+1}^{m}S_{\kappa_{\ell}}\right)}\right)$$
+
+expanding the term $kS_{0}+\sum_{\ell=k+1}^{m}S_{\kappa_{\ell}}$, note that we've defined $S_i\equiv\sum_{r=i}^{n-1}\phi_r$. It follows that $S_n=0$ and, for $a<b$,
+
+$$S_a-S_b
+=
+\sum_{r=a}^{b-1}\phi_r.$$
+
+From our choice to order the indices such that $0\le\kappa_{k+1}\le\kappa_{k+2}\le\cdots\le\kappa_m\le n$, we have
+
+$$S_{\kappa_i}-S_{\kappa_{i+1}}
+=
+\sum_{r=\kappa_i}^{\kappa_{i+1}-1}\phi_r$$
+
+The proposed replacement for the $S$-dependent term is
+
+$$k\left(S_0-S_{\kappa_{k+1}}\right)
++
+\sum_{i=k+1}^{m}
+i\left(S_{\kappa_i}-S_{\kappa_{i+1}}\right)$$
+
+Expanding gives
+
+$$\begin{aligned}
+&kS_0-kS_{\kappa_{k+1}} \\
+&\quad +(k+1)(S_{\kappa_{k+1}}-S_{\kappa_{k+2}}) \\
+&\quad +(k+2)(S_{\kappa_{k+2}}-S_{\kappa_{k+3}})
++\cdots \\
+&\quad +m(S_{\kappa_m}-S_{\kappa_{m+1}})
+\end{aligned}$$
+
+Collecting terms yields
+
+$$kS_0+
+\sum_{i=k+1}^{m}S_{\kappa_i}
+-
+mS_{\kappa_{m+1}}$$
