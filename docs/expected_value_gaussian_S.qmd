@@ -1,0 +1,321 @@
+---
+title: "Expected Value of the Exponential Term"
+format: html
+---
+
+Assume
+
+$$
+\phi_r \stackrel{\mathrm{iid}}{\sim} N(0,1).
+$$
+
+Define
+
+$$
+Q=\sum_{\ell=k+1}^{m}\kappa_\ell
+$$
+
+and
+
+$$
+A=kS_0+\sum_{\ell=k+1}^{m}S_{\kappa_\ell}.
+$$
+
+We want
+
+$$
+E\left[
+\exp\left\{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t\,Q
++\sigma\sqrt{\Delta t}\,A
+\right\}
+\right].
+$$
+
+Since $Q$ is nonrandom,
+
+$$
+E[\cdots]
+=
+\exp\left\{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t\,Q
+\right\}
+E\left[e^{\sigma\sqrt{\Delta t}A}\right].
+$$
+
+# Rewrite $A$ using independent increments
+
+Recall
+
+$$
+S_i=\sum_{r=i}^{n-1}\phi_r.
+$$
+
+Thus, for $a\le b$,
+
+$$
+S_a-S_b=\sum_{r=a}^{b-1}\phi_r,
+$$
+
+and $S_n=0$.
+
+Given
+
+$$
+0\le\kappa_{k+1}\le\kappa_{k+2}\le\cdots\le\kappa_m\le n,
+$$
+
+define
+
+$$
+\kappa_{m+1}=n.
+$$
+
+Then
+
+$$
+A
+=
+k\left(S_0-S_{\kappa_{k+1}}\right)
++
+\sum_{i=k+1}^{m}
+i\left(S_{\kappa_i}-S_{\kappa_{i+1}}\right).
+$$
+
+Expanding the right side gives
+
+$$
+\begin{aligned}
+&kS_0-kS_{\kappa_{k+1}}\\
+&\quad +(k+1)S_{\kappa_{k+1}}-(k+1)S_{\kappa_{k+2}}\\
+&\quad +(k+2)S_{\kappa_{k+2}}-(k+2)S_{\kappa_{k+3}}\\
+&\quad +\cdots\\
+&\quad +mS_{\kappa_m}-mS_{\kappa_{m+1}}.
+\end{aligned}
+$$
+
+Since $S_{\kappa_{m+1}}=S_n=0$, this reduces to
+
+$$
+kS_0+\sum_{\ell=k+1}^{m}S_{\kappa_\ell}=A.
+$$
+
+Using the definition of $S_i$,
+
+$$
+A
+=
+k\sum_{r=0}^{\kappa_{k+1}-1}\phi_r
++
+\sum_{i=k+1}^{m}
+i\sum_{r=\kappa_i}^{\kappa_{i+1}-1}\phi_r.
+$$
+
+The ranges of $r$ are disjoint. Since the $\phi_r$ are IID standard Gaussian variables, the sums are independent Gaussian variables.
+
+In particular,
+
+$$
+\sum_{r=0}^{\kappa_{k+1}-1}\phi_r
+\sim N(0,\kappa_{k+1}),
+$$
+
+and
+
+$$
+\sum_{r=\kappa_i}^{\kappa_{i+1}-1}\phi_r
+\sim
+N\left(0,\kappa_{i+1}-\kappa_i\right).
+$$
+
+Therefore
+
+$$
+A\sim N(0,V),
+$$
+
+where
+
+$$
+V
+=
+k^2\kappa_{k+1}
++
+\sum_{i=k+1}^{m-1}
+i^2(\kappa_{i+1}-\kappa_i)
++
+m^2(n-\kappa_m).
+$$
+
+# Apply the Gaussian moment-generating function
+
+For $Z\sim N(0,V)$,
+
+$$
+E[e^{tZ}]=e^{t^2V/2}.
+$$
+
+Taking
+
+$$
+t=\sigma\sqrt{\Delta t}
+$$
+
+gives
+
+$$
+E\left[e^{\sigma\sqrt{\Delta t}A}\right]
+=
+\exp\left\{
+\frac{\sigma^2\Delta t}{2}V
+\right\}.
+$$
+
+Hence
+
+$$
+\begin{aligned}
+&E\left[
+\exp\left\{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t
+\sum_{\ell=k+1}^{m}\kappa_\ell
++
+\sigma\sqrt{\Delta t}
+\left(
+kS_0+\sum_{\ell=k+1}^{m}S_{\kappa_\ell}
+\right)
+\right\}
+\right]\\
+&=
+\exp\left\{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t
+\sum_{\ell=k+1}^{m}\kappa_\ell
++
+\frac{\sigma^2\Delta t}{2}
+\left[
+k^2\kappa_{k+1}
++
+\sum_{i=k+1}^{m-1}i^2(\kappa_{i+1}-\kappa_i)
++
+m^2(n-\kappa_m)
+\right]
+\right\}.
+\end{aligned}
+$$
+
+# Simplify the variance
+
+Starting with
+
+$$
+V
+=
+k^2\kappa_{k+1}
++
+\sum_{i=k+1}^{m-1}i^2(\kappa_{i+1}-\kappa_i)
++
+m^2(n-\kappa_m),
+$$
+
+expand the differences,
+
+$$
+\begin{aligned}
+V
+={}&k^2\kappa_{k+1}
++\sum_{i=k+1}^{m-1}i^2\kappa_{i+1}
+-\sum_{i=k+1}^{m-1}i^2\kappa_i\\
+&+m^2n-m^2\kappa_m.
+\end{aligned}
+$$
+
+Collecting the coefficient of each $\kappa_\ell$ gives
+
+$$
+V
+=
+m^2n-\sum_{\ell=k+1}^{m}(2\ell-1)\kappa_\ell.
+$$
+
+Therefore,
+
+$$
+\begin{aligned}
+&E\left[
+\exp\left\{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t
+\sum_{\ell=k+1}^{m}\kappa_\ell
++
+\sigma\sqrt{\Delta t}
+\left(
+kS_0+\sum_{\ell=k+1}^{m}S_{\kappa_\ell}
+\right)
+\right\}
+\right]\\
+&=
+\exp\left\{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t
+\sum_{\ell=k+1}^{m}\kappa_\ell
++
+\frac{\sigma^2\Delta t}{2}
+\left[
+m^2n-\sum_{\ell=k+1}^{m}(2\ell-1)\kappa_\ell
+\right]
+\right\}.
+\end{aligned}
+$$
+
+# Final simplification
+
+Since
+
+$$
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t
+\sum_{\ell=k+1}^{m}\kappa_\ell
+=
+-\mu\Delta t\sum_{\ell=k+1}^{m}\kappa_\ell
++
+\frac{\sigma^2\Delta t}{2}
+\sum_{\ell=k+1}^{m}\kappa_\ell,
+$$
+
+combining the $\sigma^2$ terms gives
+
+$$
+\frac{\sigma^2\Delta t}{2}
+\sum_{\ell=k+1}^{m}\kappa_\ell
+-
+\frac{\sigma^2\Delta t}{2}
+\sum_{\ell=k+1}^{m}(2\ell-1)\kappa_\ell
+=
+-\sigma^2\Delta t
+\sum_{\ell=k+1}^{m}(\ell-1)\kappa_\ell.
+$$
+
+Thus the final result is
+
+$$
+\begin{aligned}
+&E\left[
+\exp\left\{
+-\left(\mu-\frac{\sigma^2}{2}\right)\Delta t
+\sum_{\ell=k+1}^{m}\kappa_\ell
++
+\sigma\sqrt{\Delta t}
+\left(
+kS_0+\sum_{\ell=k+1}^{m}S_{\kappa_\ell}
+\right)
+\right\}
+\right]\\
+&=
+\exp\left\{
+-\mu\Delta t
+\sum_{\ell=k+1}^{m}\kappa_\ell
++
+\frac{\sigma^2\Delta t}{2}m^2n
+-
+\sigma^2\Delta t
+\sum_{\ell=k+1}^{m}(\ell-1)\kappa_\ell
+\right\}.
+\end{aligned}
+$$

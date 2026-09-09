@@ -95,9 +95,13 @@ $$\begin{aligned}
 &\quad +m(S_{\kappa_m}-S_{\kappa_{m+1}})
 \end{aligned}$$
 
-Collecting terms yields
+but there is no $\kappa_{m+1}$ Collecting terms yields
 
 $$kS_0+
 \sum_{i=k+1}^{m}S_{\kappa_i}
 -
 mS_{\kappa_{m+1}}$$
+
+k
+
+$$kS_0+\sum_{i=k+1}^{m}S_{\kappa_i}= k\sum_{i=0}^{n}\phi_i + \sum_{i=k+1}^{m}\sum_{j=i}^{n}\phi_j$$
